@@ -21,7 +21,7 @@ public class TickRecordsInMongoSnapshotService {
     private final TickRecordMapper tickRecordMapper;
     private final TickRecordRepository tickRecordRepository;
 
-    private final ExecutorService executorService = Executors.newCachedThreadPool(Thread.ofVirtual().factory());
+    private final ExecutorService executorService = Executors.newFixedThreadPool(5);
 
     @SneakyThrows
     @KafkaListener(id = "db.snapshotIntoMongo", topics = "${xtb.topicName}")
