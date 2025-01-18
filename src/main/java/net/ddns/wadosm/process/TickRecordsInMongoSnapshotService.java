@@ -9,6 +9,7 @@ import net.ddns.wadosm.process.entity.TickRecordEntity;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -27,7 +28,7 @@ public class TickRecordsInMongoSnapshotService {
     @KafkaListener(id = "db.snapshotIntoMongo", topics = "${xtb.topicName}")
     public void listenRecords(String content) {
         log.debug("received kafka message");
-        executorService.submit(() -> processRecord(content));
+        processRecord(content);
         log.debug("done");
     }
 
@@ -36,9 +37,15 @@ public class TickRecordsInMongoSnapshotService {
         TickRecordDto tickRecordDto = objectMapper.readValue(content, TickRecordDto.class);
         log.debug("Received tick record <<< {}", tickRecordDto);
 
-        TickRecordEntity tickRecordEntity = tickRecordMapper.mapTickRecord(tickRecordDto);
-        TickRecordEntity saved = tickRecordRepository.save(tickRecordEntity);
+        TickRecordEntity entity = tickRecordMapper.mapTickRecord(tickRecordDto);
 
-        log.debug("saved, id: {}", saved.getId());
+        Optional<TickRecordEntity> found = tickRecordRepository.findBySymbolAndTimestampAndQuoteIdAndLevel(entity.getSymbol(), entity.getTimestamp(), entity.getQuoteId(), entity.getLevel());
+
+        if (found.isEmpty()) {
+            TickRecordEntity saved = tickRecordRepository.save(entity);
+            log.debug("saved, entity: {}", saved);
+        } else {
+            log.debug("skipped, entity {} exists", entity);
+        }
     }
 }

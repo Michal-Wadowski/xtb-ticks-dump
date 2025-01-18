@@ -32,7 +32,7 @@ public class XtbTicksDumpApplication {
         @Override
         public Instant deserialize(JsonParser jsonParser, DeserializationContext context) throws IOException {
             long milliseconds = jsonParser.getLongValue();
-            return Instant.ofEpochSecond(milliseconds / 1000);
+            return Instant.ofEpochMilli(milliseconds);
         }
     }
 }
